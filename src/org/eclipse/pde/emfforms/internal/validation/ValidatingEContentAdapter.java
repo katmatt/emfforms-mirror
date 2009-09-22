@@ -8,13 +8,12 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: ValidatingEContentAdapter.java,v 1.10 2009/09/07 13:16:30 bcabe Exp $
+ * $Id: ValidatingEContentAdapter.java,v 1.11 2009/09/22 14:54:31 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.internal.validation;
 
 import java.util.Properties;
 import org.eclipse.core.databinding.DataBindingContext;
-import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.ecore.EObject;
@@ -29,17 +28,15 @@ import org.eclipse.ui.forms.editor.IFormPage;
 import org.osgi.framework.*;
 
 public class ValidatingEContentAdapter extends EContentAdapter {
-	private DataBindingContext _dataBindingContext;
 	private EmfFormEditor<?> _formEditor;
-	private IObservableValue _observedValue;
+	private DataBindingContext _dataBindingContext;
 	private Diagnostician _diagnostician;
 
 	private ValidatingService validatingService;
 
-	public ValidatingEContentAdapter(IObservableValue observedValue, DataBindingContext dataBindingContext, EmfFormEditor<?> formEditor) {
+	public ValidatingEContentAdapter(EmfFormEditor<?> formEditor) {
 		_formEditor = formEditor;
-		_dataBindingContext = dataBindingContext;
-		_observedValue = observedValue;
+		_dataBindingContext = formEditor.getDataBindingContext();
 
 		// if SCR is not present, we want to register the Eclipse 3.4 validator manually ...
 		forceValidatingService34Registration();
@@ -89,7 +86,7 @@ public class ValidatingEContentAdapter extends EContentAdapter {
 		messageManager.removeAllMessages();
 		messageManager.setAutoUpdate(false);
 
-		Diagnostic diagnostics = validate((EObject) _observedValue.getValue());
+		Diagnostic diagnostics = validate(_formEditor.getCurrentEObject());
 
 		for (Diagnostic diagnostic : diagnostics.getChildren()) {
 			getValidatorService().analyzeDiagnostic(_dataBindingContext, diagnostic, messageManager);

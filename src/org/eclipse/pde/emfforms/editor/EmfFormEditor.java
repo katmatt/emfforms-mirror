@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfFormEditor.java,v 1.30 2009/09/22 14:49:59 bcabe Exp $
+ * $Id: EmfFormEditor.java,v 1.31 2009/09/22 14:54:31 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -144,7 +144,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 	private void init() {
 		_editingDomain = createEditingDomain();
 		_bindingContext = new EMFDataBindingContext();
-		_validator = new ValidatingEContentAdapter(_observableValue, _bindingContext, this);
+		_validator = new ValidatingEContentAdapter(this);
 
 		// Add a listener to set the most recent command's affected objects to
 		// be the selection of the viewer with focus.
