@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfFormEditor.java,v 1.31 2009/09/22 14:54:31 bcabe Exp $
+ * $Id: EmfFormEditor.java,v 1.32 2009/09/22 16:28:28 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -190,7 +190,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		// executed.
 		BasicCommandStack commandStack = new BasicCommandStack();
 
-		if (_editorConfig.isUsingSharedClipboard())
+		if (getEditorConfig().isUsingSharedClipboard())
 			return new SharedClipboardAdapterFactoryEditingDomain(_adapterFactory, commandStack, new HashMap<Resource, Boolean>());
 		// else
 		return new AdapterFactoryEditingDomain(_adapterFactory, commandStack, new HashMap<Resource, Boolean>());
@@ -218,7 +218,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 	}
 
 	private void addSourcePage() throws PartInitException {
-		if (!_editorConfig.isShowSourcePage())
+		if (!getEditorConfig().isShowSourcePage())
 			return;
 
 		boolean isXmlUiBundlePresent = false;
@@ -314,7 +314,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 	 * @param monitor
 	 */
 	protected void internalDoValidate(IProgressMonitor monitor) {
-		VALIDATE_ON_SAVE validateOnSave = _editorConfig.getValidateOnSave();
+		VALIDATE_ON_SAVE validateOnSave = getEditorConfig().getValidateOnSave();
 
 		// result of the Validation
 		Diagnostic diagnostic = Diagnostic.OK_INSTANCE;
@@ -421,12 +421,12 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 
 	@Override
 	public final boolean isSaveAsAllowed() {
-		return this._editorConfig.isSaveAsAllowed();
+		return getEditorConfig().isSaveAsAllowed();
 	}
 
 	@Override
 	protected PDEFormToolkit createToolkit(Display display) {
-		return this._editorConfig.createPDEFormToolkit(display);
+		return getEditorConfig().createPDEFormToolkit(display);
 	}
 
 	/**
@@ -652,7 +652,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 	private IContentOutlinePage getContentOutlinePage() {
 		if (contentOutlinePage == null) {
 			contentOutlinePage = new EmfContentOutlinePage(this);
-			contentOutlinePage.setViewerInput(_editorConfig.getOutlineInput(getCurrentEObject()));
+			contentOutlinePage.setViewerInput(getEditorConfig().getOutlineInput(getCurrentEObject()));
 
 			// Listen to selection so that we can handle it is a special way.
 			contentOutlinePage.addSelectionChangedListener(new ISelectionChangedListener() {
