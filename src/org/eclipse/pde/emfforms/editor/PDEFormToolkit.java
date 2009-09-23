@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: PDEFormToolkit.java,v 1.6 2009/09/23 08:33:29 bcabe Exp $
+ * $Id: PDEFormToolkit.java,v 1.7 2009/09/23 13:04:36 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -151,7 +151,7 @@ public class PDEFormToolkit extends FormToolkit {
 	}
 
 	public static Pair<Text, Button> createLabelAndBrowseText(String label, Composite composite) {
-		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(composite);
+		GridLayoutFactory.fillDefaults().margins(0, 5).numColumns(2).applyTo(composite);
 
 		Label labelName = new Label(composite, SWT.NONE);
 		labelName.setText(label);
