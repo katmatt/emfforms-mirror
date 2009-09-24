@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfMasterDetailBlock.java,v 1.18 2009/09/14 09:10:27 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.19 2009/09/24 07:57:10 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -161,16 +161,6 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 		treeViewer.addOpenListener(new IOpenListener() {
 			public void open(OpenEvent event) {
 				detailsPart.setFocus();
-			}
-		});
-
-		// add +/- key shortcuts
-		treeViewer.getTree().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == Action.findKeyCode("DELETE")) { //$NON-NLS-1$
-					removeAction.run();
-				}
 			}
 		});
 
