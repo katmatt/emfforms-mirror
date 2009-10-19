@@ -8,19 +8,17 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: AbstractSourcePage.java,v 1.2 2009/08/21 21:03:03 bcabe Exp $
+ * $Id: AbstractSourcePage.java,v 1.3 2009/10/19 19:54:21 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.internal.editor;
 
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.Collections;
 import java.util.EventObject;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.emf.common.command.CommandStackListener;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.text.source.SourceViewer;
@@ -65,15 +63,14 @@ public abstract class AbstractSourcePage extends AbstractEmfFormPage {
 	private void refreshSourceContent() {
 		EObject obj = (EObject) getObservedValue().getValue();
 
-		// Copies the root to avoid modifying it
-		final StringWriter writer = new StringWriter();
+		final OutputStream outputStream = new ByteArrayOutputStream();
 		try {
-			((XMLResource) obj.eResource()).save(writer, Collections.EMPTY_MAP);
+			obj.eResource().save(outputStream, Collections.EMPTY_MAP);
+			outputStream.close();
 		} catch (IOException e) {
 			Activator.log(e);
 		}
-		final String result = writer.toString();
-		writer.flush();
+		final String result = outputStream.toString();
 		if (_sourceViewer != null)
 			_sourceViewer.getDocument().set(result);
 	}
