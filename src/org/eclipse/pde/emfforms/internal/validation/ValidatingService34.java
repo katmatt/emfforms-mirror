@@ -43,11 +43,7 @@ public class ValidatingService34 implements ValidatingService {
 				if (diagnosticData.get(1) == emfObservable.getValueType()) {
 					if (swtObservable.getWidget() instanceof Control) {
 						Control control = (Control) swtObservable.getWidget();
-
-						if (true || control.isVisible())
-							messageManager.addMessage(swtObservable, diagnostic.getMessage(), null, keyMap.getMessageProviderKey(diagnostic.getSeverity()), control);
-						else
-							messageManager.addMessage(swtObservable, diagnostic.getMessage(), null, keyMap.getMessageProviderKey(diagnostic.getSeverity()));
+						messageManager.addMessage(swtObservable, diagnostic.getMessage(), null, keyMap.getMessageProviderKey(diagnostic.getSeverity()), control);
 
 						return true;
 					}

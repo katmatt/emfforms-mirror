@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: RichTooltipHyperlinkAdapter.java,v 1.2 2009/09/13 21:28:29 bcabe Exp $
+ * $Id: RichTooltipHyperlinkAdapter.java,v 1.3 2009/10/23 16:14:22 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.internal.validation;
 
@@ -143,8 +143,10 @@ public class RichTooltipHyperlinkAdapter extends HyperlinkAdapter {
 					pw.print("\"> <a href=\"");
 					pw.print(message.hashCode() + "");
 					pw.print("\">");
+					//FIXME prefix should be HTML escaped
 					if (message.getPrefix() != null)
 						pw.print(message.getPrefix());
+					//FIXME message should be HTML escaped
 					pw.print(message.getMessage());
 					pw.println("</a></li>");
 				}

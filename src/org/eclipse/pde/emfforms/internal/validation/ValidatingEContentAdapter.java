@@ -8,18 +8,21 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: ValidatingEContentAdapter.java,v 1.11 2009/09/22 14:54:31 bcabe Exp $
+ * $Id: ValidatingEContentAdapter.java,v 1.12 2009/10/23 16:14:21 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.internal.validation;
 
-import java.util.Properties;
+import java.util.*;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.Diagnostic;
+import org.eclipse.emf.common.util.DiagnosticChain;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EContentAdapter;
 import org.eclipse.emf.edit.provider.IItemLabelProvider;
+import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.pde.emfforms.editor.EmfFormEditor;
 import org.eclipse.pde.emfforms.editor.ValidatingService;
 import org.eclipse.pde.emfforms.internal.Activator;
@@ -55,8 +58,27 @@ public class ValidatingEContentAdapter extends EContentAdapter {
 
 				return super.getObjectLabel(eObject);
 			}
-		};
 
+			protected boolean doValidateContents(EObject eObject, DiagnosticChain diagnostics, Map<Object, Object> context) {
+
+				Resource eContainerResource = eObject.eResource();
+				List<EObject> eContents = eObject.eContents();
+				if (!eContents.isEmpty()) {
+					boolean result = true;
+					for (Iterator<EObject> i = eContents.iterator(); i.hasNext() && (result || diagnostics != null);) {
+						EObject child = i.next();
+						// in case of cross resource containment, 
+						// avoid to validate a child which are not in the container resource
+						Resource eChildResource = child.eResource();
+						if (eContainerResource != null && eChildResource == eContainerResource) {
+							result &= validate(child, diagnostics, context);
+						}
+					}
+					return result;
+				}
+				return true;
+			}
+		};
 	}
 
 	private void forceValidatingService34Registration() {
@@ -71,7 +93,7 @@ public class ValidatingEContentAdapter extends EContentAdapter {
 	@Override
 	public void notifyChanged(Notification notification) {
 		super.notifyChanged(notification);
-		if (notification.getEventType() != Notification.REMOVING_ADAPTER) {
+		if (!NotificationFilter.READ.matches(notification)) {
 			validate();
 		}
 	}
