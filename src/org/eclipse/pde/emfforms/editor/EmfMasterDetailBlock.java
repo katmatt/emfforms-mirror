@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfMasterDetailBlock.java,v 1.19 2009/09/24 07:57:10 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.20 2009/10/31 16:30:44 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -106,6 +106,9 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 		// TODO try to use the new look using a 3.5 fragment
 		FilteredTree ft = new FilteredTree(client, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL, new PatternFilter());
 		treeViewer = ft.getViewer();
+
+		// Prevent scrollbars to be managed by the editor's root composite
+		GridDataFactory.fillDefaults().grab(true, true).hint(50, 50).applyTo(treeViewer.getTree());
 
 		//Buttons
 		if (showPushButtons()) {
