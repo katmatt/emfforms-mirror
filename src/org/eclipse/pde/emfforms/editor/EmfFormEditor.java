@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfFormEditor.java,v 1.32 2009/09/22 16:28:28 bcabe Exp $
+ * $Id: EmfFormEditor.java,v 1.33 2009/11/03 12:49:34 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -577,10 +577,6 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 
 	private class ResourceDeltaVisitor implements IResourceDeltaVisitor {
 		public boolean visit(IResourceDelta delta) throws CoreException {
-			// filter events related to changes on markers
-			if ((delta.getFlags() & IResourceDelta.MARKERS) == IResourceDelta.MARKERS) {
-				return false;
-			}
 
 			if (delta.getResource().getType() == IResource.FILE) {
 				if (delta.getKind() == IResourceDelta.REMOVED) {
@@ -589,15 +585,17 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 
 					Resource currentResource = getCurrentEObject().eResource();
 					if (currentResource.getURI().equals(changedURI)) {
-						Shell currentShell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-
-						currentShell.getDisplay().asyncExec(new Runnable() {
+						Display.getDefault().asyncExec(new Runnable() {
 							public void run() {
 								getSite().getPage().closeEditor(getCurrentInstance(), false);
 							}
 						});
 					}
 				} else if (delta.getKind() == IResourceDelta.CHANGED) {
+					// filter events related to changes on markers
+					if ((delta.getFlags() & IResourceDelta.MARKERS) == IResourceDelta.MARKERS) {
+						return false;
+					}
 					String fullPath = delta.getFullPath().toString();
 					final URI changedURI = URI.createPlatformResourceURI(fullPath, false);
 
