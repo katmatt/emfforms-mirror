@@ -17,7 +17,7 @@ public interface ValidatingService {
 
 		protected KeyMap() {
 			keymap.put(Integer.valueOf(IStatus.ERROR), Integer.valueOf(IMessageProvider.ERROR));
-			keymap.put(Integer.valueOf(IStatus.INFO), Integer.valueOf(IMessageProvider.WARNING));
+			keymap.put(Integer.valueOf(IStatus.WARNING), Integer.valueOf(IMessageProvider.WARNING));
 			keymap.put(Integer.valueOf(IStatus.INFO), Integer.valueOf(IMessageProvider.INFORMATION));
 			keymap.put(Integer.valueOf(IStatus.OK), Integer.valueOf(IMessageProvider.NONE));
 			keymap.put(Integer.valueOf(IStatus.CANCEL), Integer.valueOf(IMessageProvider.INFORMATION));
