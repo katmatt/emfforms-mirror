@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfActionBarContributor.java,v 1.6 2009/09/02 14:11:43 bcabe Exp $
+ * $Id: EmfActionBarContributor.java,v 1.7 2009/12/02 11:24:33 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -229,7 +229,7 @@ public class EmfActionBarContributor extends EditingDomainActionBarContributor i
 	 * 
 	 * @return the collection< i action>
 	 */
-	protected Collection<IAction> generateCreateChildActions(Collection<?> childDescriptors, ISelection selection) {
+	public Collection<IAction> generateCreateChildActions(Collection<?> childDescriptors, ISelection selection) {
 		Collection<IAction> actions = new ArrayList<IAction>();
 		if (childDescriptors != null) {
 			for (Object descriptor : childDescriptors) {
@@ -249,7 +249,7 @@ public class EmfActionBarContributor extends EditingDomainActionBarContributor i
 	 * 
 	 * @return the collection< i action>
 	 */
-	protected Collection<IAction> generateCreateSiblingActions(Collection<?> descriptors, ISelection selection) {
+	public Collection<IAction> generateCreateSiblingActions(Collection<?> descriptors, ISelection selection) {
 		Collection<IAction> actions = new ArrayList<IAction>();
 		if (descriptors != null) {
 			for (Object descriptor : descriptors) {
