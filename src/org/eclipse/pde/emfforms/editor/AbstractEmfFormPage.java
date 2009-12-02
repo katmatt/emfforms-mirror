@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: AbstractEmfFormPage.java,v 1.8 2009/09/13 21:30:05 bcabe Exp $
+ * $Id: AbstractEmfFormPage.java,v 1.9 2009/12/02 11:28:22 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -20,6 +20,7 @@ import org.eclipse.pde.emfforms.internal.validation.RichTooltipHyperlinkAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IEditorActionBarContributor;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.Form;
@@ -33,6 +34,7 @@ public abstract class AbstractEmfFormPage extends FormPage implements IEmfFormPa
 
 	private int numColumns = 1;
 
+	/** @deprecated Use getMainMasterDetailBlock() method instead */
 	private boolean isMasterDetail = false;
 
 	/**
@@ -49,17 +51,45 @@ public abstract class AbstractEmfFormPage extends FormPage implements IEmfFormPa
 
 	/**
 	 * Constructor that creates the page and initializes it with the editor.
+	 * Allows to customize the number of columns 
+	 * 
+	 * @param editor
+	 * @param numColumns
+	 */
+	public AbstractEmfFormPage(EmfFormEditor<?> editor, int numColumns) {
+		this(editor, numColumns, ""); //$NON-NLS-1$
+		this.setPartName(getPartName());
+	}
+
+	/**
+	 * Constructor that creates the page and initializes it with the editor.
+	 * Allows to customize the number of columns and set explicitly the page name.
+	 * 
+	 * @param editor
+	 * @param numColumns
+	 * @param pageName
+	 */
+	public AbstractEmfFormPage(EmfFormEditor<?> editor, int numColumns, String pageName) {
+		this(editor);
+		this.numColumns = numColumns;
+		setPartName(pageName);
+	}
+
+	/**
+	 * Constructor that creates the page and initializes it with the editor.
 	 * Allows to customize the number of columns, and to indicate that the content will consist in a MasterDetailsBlock 
 	 * 
 	 * @param editor
 	 * @param numColumns
 	 * @param isMasterDetail
+	 * @deprecated Use the constructor without the isMasterDetail parameter. Instead, override the getMainMasterDetailBlock() method
 	 */
 	public AbstractEmfFormPage(EmfFormEditor<?> editor, int numColumns, boolean isMasterDetail) {
 		this(editor, numColumns, isMasterDetail, "");
 		this.setPartName(getPartName());
 	}
 
+	/** @deprecated Use the constructor without the isMasterDetail parameter. Instead, override the getMainMasterDetailBlock() method */
 	public AbstractEmfFormPage(EmfFormEditor<?> editor, int numColumns, boolean isMasterDetail, String pageName) {
 		this(editor);
 		this.numColumns = numColumns;
@@ -110,6 +140,15 @@ public abstract class AbstractEmfFormPage extends FormPage implements IEmfFormPa
 		}
 	}
 
+	/**
+	 * Subclasses should override this method when an EmfMasterDetailBlock is used as the contents of the page. By default, <code>null<code> is returned.
+	 * 
+	 * @return EmfMasterDetailBlock
+	 */
+	protected EmfMasterDetailBlock getMainMasterDetailBlock() {
+		return null;
+	}
+
 	private void createHeader() {
 		Form f = this.getManagedForm().getForm().getForm();
 		f.setText(this.getPartName());
@@ -138,7 +177,7 @@ public abstract class AbstractEmfFormPage extends FormPage implements IEmfFormPa
 	}
 
 	public boolean isMasterDetail() {
-		return isMasterDetail;
+		return isMasterDetail || getMainMasterDetailBlock() != null;
 	}
 
 	/**
@@ -147,6 +186,9 @@ public abstract class AbstractEmfFormPage extends FormPage implements IEmfFormPa
 	 * It must be overriden if the actual page contains an interesting viewer.
 	 */
 	public Viewer getViewer() {
+		if (getMainMasterDetailBlock() != null) {
+			return getMainMasterDetailBlock().getTreeViewer();
+		}
 		return null;
 	}
 
@@ -155,9 +197,16 @@ public abstract class AbstractEmfFormPage extends FormPage implements IEmfFormPa
 		if (active) {
 			getEditor().validate();
 
-			// force the selection on the viewer if there is any, to avoid a bug on the ContextMenu (on tab
-			// changed, display menu was unconsistent)
 			if (getViewer() != null) {
+
+				// Update the createChild and createSibling filters
+				IEditorActionBarContributor actionBarContributor = getEditor().getEditorSite().getActionBarContributor();
+				if (actionBarContributor != null && actionBarContributor instanceof EmfActionBarContributor && getMainMasterDetailBlock() != null) {
+					((EmfActionBarContributor) actionBarContributor).setCreateChildMenuFilter(getMainMasterDetailBlock().getCreateChildContextMenuFilter());
+					((EmfActionBarContributor) actionBarContributor).setCreateSiblingMenuFilter(getMainMasterDetailBlock().getCreateSiblingContextMenuFilter());
+				}
+
+				// force the selection on the viewer if there is any, to avoid a bug on the ContextMenu (on tab changed, display menu was inconsistent)
 				IStructuredSelection selection = (IStructuredSelection) getViewer().getSelection();
 				getViewer().setSelection(selection);
 				getViewer().refresh();
