@@ -23,6 +23,10 @@ public abstract class AbstractAddAction extends Action {
 
 		Object createdObject = createNewObject(masterDetail);
 
+		// If nothing has been created, nothing to do.
+		if (createdObject == null)
+			return;
+
 		// select the created method
 		masterDetail.getTreeViewer().refresh();
 		masterDetail.getTreeViewer().setSelection(new StructuredSelection(createdObject), true);
@@ -34,7 +38,7 @@ public abstract class AbstractAddAction extends Action {
 	 * Create and return the new object to add to the masterDetail. The new object will be selected in the tree.
 	 * 
 	 * @param masterDetail where the new object will be add
-	 * @return the created object
+	 * @return the created object, or <code>null</code> if for some reason no object has been created.
 	 */
 	protected abstract Object createNewObject(EmfMasterDetailBlock masterDetail);
 
