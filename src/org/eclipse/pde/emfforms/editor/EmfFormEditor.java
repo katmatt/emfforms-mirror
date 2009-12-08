@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfFormEditor.java,v 1.33 2009/11/03 12:49:34 bcabe Exp $
+ * $Id: EmfFormEditor.java,v 1.34 2009/12/08 16:52:43 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -172,6 +172,8 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		if (_adapterFactory != null) {
 			_adapterFactory.dispose();
 		}
+
+		ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
 
 		super.dispose();
 	}
