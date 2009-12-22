@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfFormEditor.java,v 1.34 2009/12/08 16:52:43 bcabe Exp $
+ * $Id: EmfFormEditor.java,v 1.35 2009/12/22 14:19:11 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -161,7 +161,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		setSite(site);
 		setInputWithNotify(editorInput);
 
-		setPartName(getPartName());
+		setPartName(editorInput.getName());
 		// -- To manage Copy/Cut/Paste
 		site.setSelectionProvider(this);
 	}
