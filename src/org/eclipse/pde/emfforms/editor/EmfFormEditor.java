@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfFormEditor.java,v 1.35 2009/12/22 14:19:11 bcabe Exp $
+ * $Id: EmfFormEditor.java,v 1.36 2010/01/04 13:27:36 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -653,6 +653,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		if (contentOutlinePage == null) {
 			contentOutlinePage = new EmfContentOutlinePage(this);
 			contentOutlinePage.setViewerInput(getEditorConfig().getOutlineInput(getCurrentEObject()));
+			contentOutlinePage.setViewerComparator(getOutlineComparator());
 
 			// Listen to selection so that we can handle it is a special way.
 			contentOutlinePage.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -671,6 +672,14 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		}
 
 		return contentOutlinePage;
+	}
+
+	/**
+	 * Subclasses may override this method to provide their own {@link ViewerComparator} to be used in the outline's {@link TreeViewer}. It could be useful in case you want to rearrange elements
+	 * @return the {@link ViewerComparator} to use to render the outline's {@link TreeViewer}. Default implementation return <code>null</code>
+	 */
+	protected ViewerComparator getOutlineComparator() {
+		return null;
 	}
 
 	/**

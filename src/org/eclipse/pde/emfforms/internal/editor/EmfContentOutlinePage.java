@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfContentOutlinePage.java,v 1.1 2009/09/12 12:57:54 bcabe Exp $
+ * $Id: EmfContentOutlinePage.java,v 1.2 2010/01/04 13:27:35 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.internal.editor;
 
@@ -40,6 +40,8 @@ public class EmfContentOutlinePage extends ContentOutlinePage {
 
 	private Object viewerInput;
 
+	private ViewerComparator viewerComparator;
+
 	public EmfContentOutlinePage(EmfFormEditor<? extends EObject> editor) {
 		this.editor = editor;
 	}
@@ -54,6 +56,7 @@ public class EmfContentOutlinePage extends ContentOutlinePage {
 		contentOutlineViewer.setContentProvider(new AdapterFactoryContentProvider(editor.getAdapterFactory()));
 		contentOutlineViewer.setLabelProvider(new DecoratingLabelProvider(new AdapterFactoryLabelProvider(editor.getAdapterFactory()), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator()));
 		contentOutlineViewer.setInput(viewerInput);
+		contentOutlineViewer.setComparator(viewerComparator);
 		contentOutlineViewer.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element) {
@@ -106,6 +109,10 @@ public class EmfContentOutlinePage extends ContentOutlinePage {
 
 	public void setViewerInput(Object viewerInput) {
 		this.viewerInput = viewerInput;
+	}
+
+	public void setViewerComparator(ViewerComparator comparator) {
+		this.viewerComparator = comparator;
 	}
 
 	public TreeViewer getViewer() {
