@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfMasterDetailBlock.java,v 1.20 2009/10/31 16:30:44 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.21 2010/01/05 15:45:45 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -279,7 +279,14 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 	 * 
 	 * @return a ViewerFilter to apply on the treeViewer
 	 */
-	protected abstract ViewerFilter getTreeFilter();
+	protected ViewerFilter getTreeFilter() {
+		return new ViewerFilter() {
+			@Override
+			public boolean select(Viewer viewer, Object parentElement, Object element) {
+				return true;
+			}
+		};
+	}
 
 	@Override
 	protected void createToolBarActions(IManagedForm managedForm) {
