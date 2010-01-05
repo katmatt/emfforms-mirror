@@ -8,18 +8,18 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *
- * $Id: CreateElementDropDownAction.java,v 1.2 2009/12/09 09:15:38 bcabe Exp $
+ * $Id: CreateElementDropDownAction.java,v 1.3 2010/01/05 17:20:24 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor.actions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.*;
-import org.eclipse.pde.emfforms.editor.EmfActionBarContributor;
-import org.eclipse.pde.emfforms.editor.EmfMasterDetailBlock;
+import org.eclipse.pde.emfforms.editor.*;
 import org.eclipse.pde.emfforms.internal.Activator;
 import org.eclipse.pde.emfforms.internal.editor.IEmfFormsImages;
 import org.eclipse.swt.SWT;
@@ -95,18 +95,12 @@ public class CreateElementDropDownAction extends Action implements IMenuCreator 
 	}
 
 	private void updateActions() {
-		// Query the new selection for appropriate new child/sibling descriptors
 		Collection<?> newChildDescriptors = null;
 		Collection<?> newSiblingDescriptors = null;
 
-		ISelection selection = masterDetailBlock.getTreeViewer().getSelection();
-		if (selection.isEmpty()) {
-			if (masterDetailBlock.getTreeViewer().getInput() != null) {
-				selection = new StructuredSelection(masterDetailBlock.getTreeViewer().getInput());
-			} else {
-				selection = getRootElement();
-			}
-		}
+		// Query the new selection for appropriate new child/sibling descriptors
+		ISelection selection = getCurrentSelection();
+
 		if (selection instanceof IStructuredSelection && ((IStructuredSelection) selection).size() == 1) {
 			Object object = ((IStructuredSelection) selection).getFirstElement();
 
@@ -120,6 +114,33 @@ public class CreateElementDropDownAction extends Action implements IMenuCreator 
 		}
 	}
 
+	/**
+	 * Get the currentSelection from the {@link TreeViewer} widget.<br/>
+	 * Default implementation first attempts to retrieve the selection from the {@link TreeViewer},
+	 * but if the selection is empty, we compute a selection from the viewer input, or if none input
+	 * has been set, a call to the <code>getRootElement()</code> method is done.
+	 * Subclasses may override this method in order to provide their own selection.
+	 * 
+	 * @return ISelection The {@link TreeViewer} selection to be used to compute Child/Sibling actions
+	 */
+	protected ISelection getCurrentSelection() {
+		ISelection selection = masterDetailBlock.getTreeViewer().getSelection();
+		if (selection.isEmpty()) {
+			if (masterDetailBlock.getTreeViewer().getInput() != null) {
+				selection = new StructuredSelection(masterDetailBlock.getTreeViewer().getInput());
+			} else {
+				selection = getRootElement();
+			}
+		}
+		return selection;
+	}
+
+	/**
+	 * In case the {@link TreeViewer}'s input has not been initialized, return the selection from which Child/Sibling actions should be computed.
+	 * Default implementation returns a new selection based on the {@link EmfFormEditor} {@link EObject} currently edited.
+	 * 
+	 * @return ISelection The {@link TreeViewer} selection to be used to compute Child/Sibling actions
+	 */
 	protected IStructuredSelection getRootElement() {
 		return new StructuredSelection(masterDetailBlock.getEditor().getCurrentEObject());
 	}
