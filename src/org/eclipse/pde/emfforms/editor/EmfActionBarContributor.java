@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 Anyware Technologies and others.
+ * Copyright (c) 2009, 2010 Anyware Technologies and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfActionBarContributor.java,v 1.7 2009/12/02 11:24:33 bcabe Exp $
+ * $Id: EmfActionBarContributor.java,v 1.8 2010/01/22 16:42:08 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -69,6 +69,10 @@ public class EmfActionBarContributor extends EditingDomainActionBarContributor i
 		actionBars.setGlobalActionHandler(ActionFactory.UNDO.getId(), undoAction);
 		actionBars.setGlobalActionHandler(ActionFactory.REDO.getId(), redoAction);
 		actionBars.updateActionBars();
+	}
+
+	public IAction getDeleteAction() {
+		return deleteAction;
 	}
 
 	/** The show properties view action. */

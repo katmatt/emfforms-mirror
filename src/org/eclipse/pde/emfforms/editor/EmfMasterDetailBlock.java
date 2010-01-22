@@ -8,26 +8,22 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfMasterDetailBlock.java,v 1.21 2010/01/05 15:45:45 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.22 2010/01/22 16:42:08 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
 import org.eclipse.core.databinding.DataBindingContext;
-import org.eclipse.core.databinding.observable.value.IValueChangeListener;
-import org.eclipse.core.databinding.observable.value.ValueChangeEvent;
-import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.databinding.EMFUpdateValueStrategy;
-import org.eclipse.emf.edit.command.RemoveCommand;
+import org.eclipse.core.databinding.property.value.IValueProperty;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.ui.dnd.*;
 import org.eclipse.emf.edit.ui.provider.*;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.databinding.swt.SWTObservables;
-import org.eclipse.jface.databinding.viewers.ViewersObservables;
+import org.eclipse.jface.databinding.util.JFaceProperties;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.*;
-import org.eclipse.pde.emfforms.internal.actions.RemoveAction;
+import org.eclipse.pde.emfforms.editor.actions.RemoveAction;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
@@ -76,7 +72,7 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 	private Button removeButton;
 
 	protected ToolBarManager toolBarManager;
-	private Action removeAction;
+	private IAction removeAction;
 
 	public EmfMasterDetailBlock(EmfFormEditor<?> editor, String title) {
 		this.title = title;
@@ -127,9 +123,6 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 
 		//SectionToolBar
 		removeAction = createCustomToolbarRemoveAction();
-		if (removeAction == null) {
-			removeAction = new RemoveAction(this);
-		}
 
 		if (showToolbarButtons()) {
 			toolBarManager = PDEFormToolkit.createSectionToolBarManager(section);
@@ -175,39 +168,15 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 
 			DataBindingContext bindingContext = new DataBindingContext();
 
-			//Enable button when the tree selection is not empty
-			bindingContext.bindValue(ViewersObservables.observeSingleSelection(getTreeViewer()), SWTObservables.observeEnabled(getRemoveButton()), new EMFUpdateValueStrategy() {
-				/**
-				 * @see org.eclipse.core.databinding.UpdateValueStrategy#convert(java.lang.Object)
-				 */
-				@Override
-				public Object convert(Object value) {
-					return !(getTreeViewer().getSelection().isEmpty());
-				}
-			}, null);
+			IValueProperty p = JFaceProperties.value(IAction.class, IAction.ENABLED, IAction.ENABLED);
+			bindingContext.bindValue(SWTObservables.observeEnabled(getRemoveButton()), p.observe(removeAction));
 
 			//Generic action for remove button
 			getRemoveButton().addSelectionListener(new SelectionAdapter() {
 				public void widgetSelected(SelectionEvent e) {
-					Object sel = ((IStructuredSelection) getTreeViewer().getSelection()).getFirstElement();
-					if (sel != null) {
-						Command c = RemoveCommand.create(getEditor().getEditingDomain(), sel);
-						getEditor().getEditingDomain().getCommandStack().execute(c);
-					}
+					removeAction.run();
 				}
 			});
-		}
-
-		if (showToolbarButtons()) {
-
-			//Enable action when the tree selection is not empty
-			ViewersObservables.observeSingleSelection(getTreeViewer()).addValueChangeListener(new IValueChangeListener() {
-				public void handleValueChange(ValueChangeEvent event) {
-					boolean bool = !(getTreeViewer().getSelection().isEmpty());
-					removeAction.setEnabled(bool);
-				}
-			});
-
 		}
 
 		createContextMenuFor(treeViewer);
@@ -261,9 +230,15 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 		return null;
 	}
 
+	/**
+	 * Create the Action to be performed when a deletion should be performed.
+	 * Default implementation create a {@link RemoveAction} that delegates the job to the DELETE action
+	 * registered through the {@link EmfActionBarContributor} of the current {@link EmfFormEditor} 
+	 * Subclasses may override this method in order to provide their own Action
+	 * @return Action the delete action to perform 
+	 */
 	protected Action createCustomToolbarRemoveAction() {
-		// Subclass may override this method
-		return null;
+		return new RemoveAction(this);
 	}
 
 	protected Button createButton(Composite parent, String btnText) {
