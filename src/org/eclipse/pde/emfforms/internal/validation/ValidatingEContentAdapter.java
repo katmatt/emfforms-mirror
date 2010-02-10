@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 Anyware Technologies and others.
+ * Copyright (c) 2009, 2010 Anyware Technologies and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,8 +7,9 @@
  * 
  * Contributors:
  *     Anyware Technologies - initial API and implementation
+ *     Sebastien Moran <smoran@sierrawireless.com> - bug 292926
  *
- * $Id: ValidatingEContentAdapter.java,v 1.13 2009/10/31 16:35:54 bcabe Exp $
+ * $Id: ValidatingEContentAdapter.java,v 1.14 2010/02/10 10:54:50 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.internal.validation;
 
@@ -26,6 +27,7 @@ import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.pde.emfforms.editor.EmfFormEditor;
 import org.eclipse.pde.emfforms.editor.ValidatingService;
 import org.eclipse.pde.emfforms.internal.Activator;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.forms.IMessageManager;
 import org.eclipse.ui.forms.editor.IFormPage;
 import org.osgi.framework.*;
@@ -104,7 +106,7 @@ public class ValidatingEContentAdapter extends EContentAdapter {
 			return;
 		}
 
-		IMessageManager messageManager = activePageInstance.getManagedForm().getMessageManager();
+		final IMessageManager messageManager = activePageInstance.getManagedForm().getMessageManager();
 		messageManager.removeAllMessages();
 		messageManager.setAutoUpdate(false);
 
@@ -114,7 +116,12 @@ public class ValidatingEContentAdapter extends EContentAdapter {
 			getValidatorService().analyzeDiagnostic(_dataBindingContext, diagnostic, messageManager);
 		}
 
-		messageManager.update();
+		// Ensure that the update is performed within the UI Thread. See Bug #292926
+		Display.getDefault().asyncExec(new Runnable() {
+			public void run() {
+				messageManager.update();
+			}
+		});
 	}
 
 	public Diagnostic validate(EObject obj) {
