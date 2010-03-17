@@ -8,15 +8,16 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: RichTooltipHyperlinkAdapter.java,v 1.3 2009/10/23 16:14:22 bcabe Exp $
+ * $Id: RichTooltipHyperlinkAdapter.java,v 1.4 2010/03/17 10:14:35 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.internal.validation;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.List;
 import java.util.Map.Entry;
+import java.util.List;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -143,11 +144,9 @@ public class RichTooltipHyperlinkAdapter extends HyperlinkAdapter {
 					pw.print("\"> <a href=\"");
 					pw.print(message.hashCode() + "");
 					pw.print("\">");
-					//FIXME prefix should be HTML escaped
 					if (message.getPrefix() != null)
-						pw.print(message.getPrefix());
-					//FIXME message should be HTML escaped
-					pw.print(message.getMessage());
+						pw.print(StringEscapeUtils.escapeHtml(message.getPrefix()));
+					pw.print(StringEscapeUtils.escapeHtml(message.getMessage()));
 					pw.println("</a></li>");
 				}
 			}
