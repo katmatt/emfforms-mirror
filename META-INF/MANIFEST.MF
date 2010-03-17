@@ -24,8 +24,9 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-Localization: plugin
 Bundle-ActivationPolicy: lazy
-Export-Package: org.eclipse.pde.emfforms.editor,
- org.eclipse.pde.emfforms.editor.actions,
+Export-Package: org.eclipse.pde.emfforms.builder;version="0.1.0",
+ org.eclipse.pde.emfforms.editor;version="0.1.0",
+ org.eclipse.pde.emfforms.editor.actions;version="0.1.0",
  org.eclipse.pde.emfforms.internal;x-internal:=true,
  org.eclipse.pde.emfforms.internal.editor;x-internal:=true,
  org.eclipse.pde.emfforms.internal.validation;x-internal:=true
