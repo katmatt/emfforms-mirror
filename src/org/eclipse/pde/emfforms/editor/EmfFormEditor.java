@@ -8,11 +8,9 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: EmfFormEditor.java,v 1.37 2010/03/17 10:44:45 bcabe Exp $
+ * $Id: EmfFormEditor.java,v 1.38 2010/03/17 11:16:27 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
-
-import org.eclipse.pde.emfforms.internal.editor.SharedClipboardAdapterFactoryEditingDomain;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +42,6 @@ import org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider;
 import org.eclipse.emf.edit.ui.util.EditUIMarkerHelper;
 import org.eclipse.emf.edit.ui.util.EditUIUtil;
 import org.eclipse.emf.edit.ui.view.ExtendedPropertySheetPage;
-import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.jface.dialogs.*;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.jface.window.Window;
@@ -129,7 +126,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 
 	private EmfContentOutlinePage contentOutlinePage;
 
-	private ResourceDeltaVisitor _visitor;
+	private ResourceDeltaVisitor<O> _visitor;
 
 	public EmfFormEditor() {
 		this._editorConfig = getFormEditorConfig();
@@ -452,7 +449,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_CHANGE);
 	}
 
-	protected void setMainResource(Resource resource) {
+	public void setMainResource(Resource resource) {
 		if (_currentEObject != null)
 			_currentEObject.eAdapters().remove(_validator);
 
@@ -511,6 +508,10 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		return editorSelection;
 	}
 
+	public boolean isSaving() {
+		return isSaving;
+	}
+
 	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
 		selectionChangedListeners.remove(listener);
 	}
@@ -534,9 +535,7 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 	protected void handleCommandStackChanged(final EventObject event) {
 		// the edited object has been changed
 		firePropertyChange(IWorkbenchPartConstants.PROP_DIRTY);
-		// since the title of the editor is, most of the time,
-		// computed using some object attribute, ask the editor
-		// to refresh it!
+		// since the title of the editor is, most of the time, computed using some object attribute, ask the editor to refresh it!
 		firePropertyChange(IWorkbenchPartConstants.PROP_TITLE);
 
 		IFormPage activePage = getActivePageInstance();
@@ -552,75 +551,6 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 					}
 				}
 			}
-		}
-	}
-
-	private class ResourceDeltaVisitor implements IResourceDeltaVisitor {
-		public boolean visit(IResourceDelta delta) throws CoreException {
-
-			if (delta.getResource().getType() == IResource.FILE) {
-				if (delta.getKind() == IResourceDelta.REMOVED) {
-					String fullPath = delta.getFullPath().toString();
-					final URI changedURI = URI.createPlatformResourceURI(fullPath, false);
-
-					Resource currentResource = getCurrentEObject().eResource();
-					if (currentResource.getURI().equals(changedURI)) {
-						Display.getDefault().asyncExec(new Runnable() {
-							public void run() {
-								getSite().getPage().closeEditor(getCurrentInstance(), false);
-							}
-						});
-					}
-				} else if (delta.getKind() == IResourceDelta.CHANGED) {
-					// filter events related to changes on markers
-					if ((delta.getFlags() & IResourceDelta.MARKERS) == IResourceDelta.MARKERS) {
-						return false;
-					}
-					String fullPath = delta.getFullPath().toString();
-					final URI changedURI = URI.createPlatformResourceURI(fullPath, false);
-
-					SWTObservables.getRealm(Display.getDefault()).asyncExec(new Runnable() {
-
-						public void run() {
-							EObject currentEObject = (EObject) getInputObservable().getValue();
-							Resource currentResource = currentEObject.eResource();
-							boolean isMainResource = currentResource.getURI().equals(changedURI);
-							Resource changedResource = currentResource.getResourceSet().getResource(changedURI, false);
-
-							// The changed resource is contained in the
-							// resourceset, it must be reloaded
-							if (changedResource != null && changedResource.isLoaded() && !isSaving) {
-
-								// The editor has pending changes, we
-								// must
-								// inform the user, the content is going
-								// to be
-								// reloaded
-								if (isMainResource && isDirty()) {
-									getEditingDomain().getCommandStack().flush();
-								}
-
-								try {
-									changedResource.unload();
-									changedResource.load(Collections.EMPTY_MAP);
-
-									// If the modified resource is the
-									// main resource, we update the
-									// current object
-									if (isMainResource) {
-										setMainResource(changedResource);
-									}
-								} catch (IOException ioe) {
-									Activator.log(ioe);
-								}
-							}
-						}
-					});
-				}
-
-			}
-
-			return true;
 		}
 	}
 
@@ -675,14 +605,10 @@ public abstract class EmfFormEditor<O extends EObject> extends FormEditor implem
 		}
 	}
 
-	private EmfFormEditor<O> getCurrentInstance() {
-		return this;
-	}
-
 	public void resourceChanged(IResourceChangeEvent event) {
 		IResourceDelta delta = event.getDelta();
 		try {
-			_visitor = new ResourceDeltaVisitor();
+			_visitor = new ResourceDeltaVisitor<O>(this);
 			delta.accept(_visitor);
 		} catch (CoreException ce) {
 			Activator.log(ce);
