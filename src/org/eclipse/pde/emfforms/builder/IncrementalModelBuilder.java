@@ -8,71 +8,36 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: IncrementalModelBuilder.java,v 1.1 2010/03/17 11:42:44 bcabe Exp $
+ * $Id: IncrementalModelBuilder.java,v 1.2 2010/03/18 11:58:45 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.builder;
 
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
-import org.eclipse.emf.common.command.BasicCommandStack;
-import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.common.util.BasicDiagnostic;
+import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
-import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
+import org.eclipse.emf.edit.provider.IItemLabelProvider;
+import org.eclipse.emf.transaction.RunnableWithResult;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.pde.emfforms.internal.Activator;
 
 /**
  * An abstract class to subclass to launch background jobs on the modified model
  */
 public abstract class IncrementalModelBuilder extends IncrementalProjectBuilder {
-	protected class ModelFileDeltaVisitor implements IResourceDeltaVisitor {
-		private Map<Resource, IResource> modifiedResources = new HashMap<Resource, IResource>();
-		private String _contentType;
-
-		public ModelFileDeltaVisitor(String contentType) {
-			_contentType = contentType;
-		}
-
-		public Map<Resource, IResource> getModifiedResources() {
-			return modifiedResources;
-		}
-
-		/**
-		 * @see org.eclipse.core.resources.IResourceDeltaVisitor#visit(org.eclipse
-		 *      .core.resources.IResourceDelta)
-		 */
-		public boolean visit(IResourceDelta delta) throws CoreException {
-			IResource resource = delta.getResource();
-			switch (delta.getKind()) {
-				case IResourceDelta.ADDED :
-				case IResourceDelta.REMOVED :
-					// Do nothing
-					break;
-				case IResourceDelta.CHANGED :
-					if (resource instanceof IContainer)
-						return true;
-					if (_contentType != null && !_contentType.equals(((IFile) resource).getContentDescription().getContentType().getId()))
-						return false;
-					// handle changed resource
-					URI resourceURI = URI.createPlatformResourceURI(resource.getFullPath().toString(), true);
-					Resource modelResource = new AdapterFactoryEditingDomain(new ComposedAdapterFactory(ComposedAdapterFactory.Descriptor.Registry.INSTANCE), new BasicCommandStack()).getResourceSet().getResource(resourceURI, true);
-					if (modelResource != null && modelResource.isLoaded() && !modifiedResources.containsKey(modelResource)) {
-						modifiedResources.put(modelResource, resource);
-					}
-					break;
-			}
-			// return true to continue visiting children.
-			return true;
-		}
-	}
+	private String _contentType;
 
 	/**
 	 * @see org.eclipse.core.resources.IncrementalProjectBuilder#build(int,
 	 *      java.util.Map, org.eclipse.core.runtime.IProgressMonitor)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor) throws CoreException {
 		switch (kind) {
@@ -110,10 +75,10 @@ public abstract class IncrementalModelBuilder extends IncrementalProjectBuilder 
 
 		Map<Resource, IResource> modifiedResources = visitor.getModifiedResources();
 
-		monitor.beginTask("Incremental Build", modifiedResources.size());
+		monitor.beginTask("Incremental Build", modifiedResources.size()); //$NON-NLS-1$
 
 		for (Resource modelResource : modifiedResources.keySet()) {
-			build(modelResource.getContents().get(0), modifiedResources.get(modelResource), false, new SubProgressMonitor(monitor, 1));
+			build(modelResource.getContents().get(0), modifiedResources.get(modelResource), new SubProgressMonitor(monitor, 1));
 		}
 
 		monitor.done();
@@ -128,10 +93,78 @@ public abstract class IncrementalModelBuilder extends IncrementalProjectBuilder 
 	 *         exists
 	 */
 	protected String getContentType() {
-		return null;
+		return _contentType;
 	}
 
 	protected abstract void fullBuild(IProgressMonitor monitor) throws CoreException;
 
-	protected abstract void build(EObject modelObject, IResource resource, boolean force, IProgressMonitor monitor) throws CoreException;
+	protected void build(EObject modelObject, IResource resource, IProgressMonitor monitor) throws CoreException {
+		if (monitor == null) {
+			monitor = new NullProgressMonitor();
+		}
+
+		monitor.beginTask("Model Validation", 4); //$NON-NLS-1$
+
+		monitor.subTask("Validation"); //$NON-NLS-1$
+
+		Diagnostic diagnostic = validate(modelObject);
+
+		monitor.worked(3);
+
+		if (resource instanceof IContainer) {
+			MarkerHelper.cleanMarkers((IContainer) resource);
+		} else if (resource instanceof IFile) {
+			MarkerHelper.cleanMarkers((IFile) resource);
+		}
+
+		MarkerHelper.createMarkers(diagnostic, new SubProgressMonitor(monitor, 1));
+
+		monitor.done();
+	}
+
+	protected Diagnostic validate(final EObject modelObject) {
+		TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+		final AdapterFactory adapterFactory = domain instanceof AdapterFactoryEditingDomain ? ((AdapterFactoryEditingDomain) domain).getAdapterFactory() : null;
+
+		try {
+			return (Diagnostic) domain.runExclusive(new RunnableWithResult.Impl<Diagnostic>() {
+				public void run() {
+
+					Diagnostic diagnostic = new Diagnostician() {
+
+						@Override
+						public String getObjectLabel(EObject eObject) {
+							if (adapterFactory != null && !eObject.eIsProxy()) {
+								IItemLabelProvider itemLabelProvider = (IItemLabelProvider) adapterFactory.adapt(eObject, IItemLabelProvider.class);
+								if (itemLabelProvider != null) {
+									return itemLabelProvider.getText(eObject);
+								}
+							}
+
+							return super.getObjectLabel(eObject);
+						}
+					}.validate(modelObject);
+					setResult(diagnostic);
+				}
+			});
+		} catch (InterruptedException ie) {
+			// Log and return the exception in a diagnostic
+			Activator.log(ie);
+			return new BasicDiagnostic(Diagnostic.ERROR, "ModelChecker", 0, ie.getMessage(), new Object[] {modelObject}); //$NON-NLS-1$
+		}
+	}
+
+	/**
+	 * The content-type this builder is bound to is defined in the extension 
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public void setInitializationData(IConfigurationElement config, String propertyName, Object data) throws CoreException {
+		if (data != null && data instanceof Hashtable<?, ?>) {
+			Hashtable<String, String> map = (Hashtable<String, String>) data;
+			_contentType = map.get("content-type"); //$NON-NLS-1$
+		}
+
+	}
+
 }
