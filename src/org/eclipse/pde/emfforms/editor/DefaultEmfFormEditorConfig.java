@@ -8,7 +8,7 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *
- * $Id: DefaultEmfFormEditorConfig.java,v 1.8 2009/09/13 21:30:06 bcabe Exp $
+ * $Id: DefaultEmfFormEditorConfig.java,v 1.9 2010/03/18 11:20:54 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -67,6 +67,6 @@ public class DefaultEmfFormEditorConfig<E extends EmfFormEditor<O>, O extends EO
 	 */
 	public Object getOutlineInput(O suggestedInput) {
 		return suggestedInput.eResource();
-	};
+	}
 
 }
