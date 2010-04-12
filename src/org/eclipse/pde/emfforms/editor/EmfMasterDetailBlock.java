@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 Anyware Technologies and others.
+ * Copyright (c) 2009, 2010 Anyware Technologies and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,8 +7,9 @@
  * 
  * Contributors:
  *     Anyware Technologies - initial API and implementation
+ *     Sebastien Moran <SMoran@sierrawireless.com> - bug 308802
  *
- * $Id: EmfMasterDetailBlock.java,v 1.22 2010/01/22 16:42:08 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.23 2010/04/12 08:51:10 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -38,6 +39,8 @@ import org.eclipse.ui.forms.*;
 import org.eclipse.ui.forms.widgets.*;
 
 public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements IDetailsPageProvider, IMenuListener {
+
+	public static final int DEFAULT_VIEWER_OPTIONS = SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL;
 
 	protected EmfFormEditor<?> parentEditor;
 
@@ -100,7 +103,7 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 
 		// deliberate use of the 3.4 API
 		// TODO try to use the new look using a 3.5 fragment
-		FilteredTree ft = new FilteredTree(client, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL, new PatternFilter());
+		FilteredTree ft = new FilteredTree(client, getViewerOptions(), new PatternFilter());
 		treeViewer = ft.getViewer();
 
 		// Prevent scrollbars to be managed by the editor's root composite
@@ -131,7 +134,9 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 				toolBarManager.add(addAction);
 			}
 
-			toolBarManager.add(removeAction);
+			if (removeAction != null) {
+				toolBarManager.add(removeAction);
+			}
 			toolBarManager.update(true);
 			section.setTextClient(toolBarManager.getControl());
 		}
@@ -174,7 +179,8 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 			//Generic action for remove button
 			getRemoveButton().addSelectionListener(new SelectionAdapter() {
 				public void widgetSelected(SelectionEvent e) {
-					removeAction.run();
+					if (removeAction != null)
+						removeAction.run();
 				}
 			});
 		}
@@ -185,6 +191,15 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 		getEditor().addViewerToListenTo(getTreeViewer());
 
 		section.setClient(client);
+	}
+
+	/**
+	 * Default styles : SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL
+	 * 
+	 * @return int, style used to create the TreeViewer
+	 */
+	protected int getViewerOptions() {
+		return DEFAULT_VIEWER_OPTIONS;
 	}
 
 	/**
