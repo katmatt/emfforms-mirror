@@ -8,7 +8,7 @@
  * Contributors:
  *     Jacques Lescot, Sierra Wireless - initial API and implementation (bug 300462)
  *
- * $Id: RemoveAction.java,v 1.2 2010/06/02 10:16:32 bcabe Exp $
+ * $Id: RemoveAction.java,v 1.3 2010/06/02 10:18:39 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor.actions;
 
@@ -67,13 +67,13 @@ public class RemoveAction extends Action {
 	public void run() {
 		TreeViewer treeViewer = masterDetail.getTreeViewer();
 
-		EObject nearestEltToSelect = computeElementToSelectAfterDeletion(treeViewer);
+		EObject elementToSelectAfterDeletion = computeElementToSelectAfterDeletion(treeViewer);
 
 		getDeleteAction().run();
 
 		treeViewer.refresh();
-		if (nearestEltToSelect != null) {
-			treeViewer.setSelection(new StructuredSelection(nearestEltToSelect));
+		if (elementToSelectAfterDeletion != null) {
+			treeViewer.setSelection(new StructuredSelection(elementToSelectAfterDeletion));
 			treeViewer.getTree().setFocus();
 		}
 	}
