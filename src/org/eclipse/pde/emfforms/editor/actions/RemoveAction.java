@@ -8,15 +8,19 @@
  * Contributors:
  *     Jacques Lescot, Sierra Wireless - initial API and implementation (bug 300462)
  *
- * $Id: RemoveAction.java,v 1.1 2010/01/22 16:42:08 bcabe Exp $
+ * $Id: RemoveAction.java,v 1.2 2010/06/02 10:16:32 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor.actions;
 
+import java.util.List;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.edit.ui.action.EditingDomainActionBarContributor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.pde.emfforms.editor.EmfActionBarContributor;
 import org.eclipse.pde.emfforms.editor.EmfMasterDetailBlock;
@@ -62,24 +66,64 @@ public class RemoveAction extends Action {
 	@Override
 	public void run() {
 		TreeViewer treeViewer = masterDetail.getTreeViewer();
-		int selIndex = treeViewer.getTree().indexOf(treeViewer.getTree().getSelection()[0]);
+
+		EObject nearestEltToSelect = computeElementToSelectAfterDeletion(treeViewer);
 
 		getDeleteAction().run();
 
 		treeViewer.refresh();
-		if (treeViewer.getTree().getItemCount() > 0) {
-			// if we delete the last line, select the new last line
-			if (selIndex >= treeViewer.getTree().getItemCount()) {
-				selIndex = selIndex - 1;
-			}
-			// treeViewer.getTree().indexOf(TreeItem) method is returning -1 when the provided item is not a root element ...
-			// In that case we select the first root element.
-			if (selIndex > -1)
-				treeViewer.getTree().setSelection(treeViewer.getTree().getItem(selIndex));
-			else
-				treeViewer.getTree().setSelection(treeViewer.getTree().getItem(0));
+		if (nearestEltToSelect != null) {
+			treeViewer.setSelection(new StructuredSelection(nearestEltToSelect));
 			treeViewer.getTree().setFocus();
 		}
+	}
+
+	/**
+	 * Find the next element to be selected in the tree once the delete operation has been performed
+	 * 
+	 * @param treeViewer The {@link TreeViewer}
+	 * @return the next {@link EObject} to be selected in the tree or <code>null</code> if none found. A possible reason to that last case is because there is no remaining element to select in the tree.
+	 */
+	protected EObject computeElementToSelectAfterDeletion(TreeViewer treeViewer) {
+		EObject nextObjToSelect = null;
+
+		// Iterate over all the selected element to be removed to define the new element to select in the tree after the delete operation is performed. 
+		List<EObject> selectedElements = (List<EObject>) ((StructuredSelection) treeViewer.getSelection()).toList();
+		for (EObject eltToRemove : selectedElements) {
+			EObject containerElt = eltToRemove.eContainer();
+			EStructuralFeature eContainingFeature = eltToRemove.eContainingFeature();
+			// Retrieve all the siblings elements and try to select the nearest one
+			Object featureValue = containerElt.eGet(eContainingFeature);
+			if (featureValue instanceof List<?>) {
+				List<EObject> siblingElts = (List<EObject>) featureValue;
+				EObject candidateElt = getSelectableElement(selectedElements, siblingElts, eltToRemove);
+				if (candidateElt != null) {
+					return candidateElt;
+				}
+			}
+		}
+		return nextObjToSelect;
+	}
+
+	private EObject getSelectableElement(List<EObject> eltsToRemoveList, List<EObject> siblingElts, EObject eltToRemove) {
+		int indexEltToRemove = siblingElts.indexOf(eltToRemove);
+		// Try to search the next element in the list
+		for (int i = indexEltToRemove + 1; i < siblingElts.size(); i++) {
+			if (!eltsToRemoveList.contains(siblingElts.get(i))) {
+				return siblingElts.get(i);
+			}
+		}
+		// Or search among the previous elements in the list
+		for (int i = indexEltToRemove - 1; i >= 0; i--) {
+			if (!eltsToRemoveList.contains(siblingElts.get(i))) {
+				return siblingElts.get(i);
+			}
+		}
+		// Or return the parent element
+		if (!eltsToRemoveList.contains(eltToRemove.eContainer())) {
+			return eltToRemove.eContainer();
+		}
+		return null;
 	}
 
 	private EmfMasterDetailBlock masterDetail;
