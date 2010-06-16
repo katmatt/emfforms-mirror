@@ -8,8 +8,9 @@
  * Contributors:
  *     Anyware Technologies - initial API and implementation
  *     Sebastien Moran <SMoran@sierrawireless.com> - bug 308802
+ *     Jacques Lescot <JLescot@sierrawireless.com> - bug 314677
  *
- * $Id: EmfMasterDetailBlock.java,v 1.23 2010/04/12 08:51:10 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.24 2010/06/16 16:25:46 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
