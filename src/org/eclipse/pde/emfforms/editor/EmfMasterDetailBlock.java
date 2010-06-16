@@ -10,7 +10,7 @@
  *     Sebastien Moran <SMoran@sierrawireless.com> - bug 308802
  *     Jacques Lescot <JLescot@sierrawireless.com> - bug 314677
  *
- * $Id: EmfMasterDetailBlock.java,v 1.24 2010/06/16 16:25:46 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.25 2010/06/16 17:28:11 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -26,6 +26,7 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.pde.emfforms.editor.actions.RemoveAction;
+import org.eclipse.pde.emfforms.internal.Activator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
@@ -67,6 +68,13 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 	 * If the flag is set, the {@link EmfMasterDetailBlock#createCustomButtons(Composite)} will be called. 
 	 */
 	public static final int USE_CUSTOM_PUSH_BUTTONS = 1 << 2;
+
+	/**
+	 * Style constant to indicate whether generic "Collapse All" and "Expand All" buttons should be displayed
+	 * in the toolbar or not. Note that this style is only relevant when the USE_GENERIC_TOOLBAR_BUTTONS style
+	 * is applied too, otherwise it has no effect. A separator is also added before adding those buttons.
+	 */
+	public static final int USE_EXPAND_COLLAPSE_BUTTONS = 1 << 3;
 
 	protected int buttonOption = USE_GENERIC_TOOLBAR_BUTTONS;
 
@@ -137,6 +145,27 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 
 			if (removeAction != null) {
 				toolBarManager.add(removeAction);
+			}
+
+			if (showExpandCollapseButtons()) {
+				toolBarManager.add(new Separator());
+
+				toolBarManager.add(new Action("Expand All", Activator.getImageDescriptor("icons/obj16/expand.gif")) { //$NON-NLS-1$ //$NON-NLS-2$
+							@Override
+							public void run() {
+								treeViewer.getTree().setRedraw(false);
+								treeViewer.expandAll();
+								treeViewer.getTree().setRedraw(true);
+							}
+						});
+				toolBarManager.add(new Action("Collapse All", Activator.getImageDescriptor("icons/obj16/collapse.gif")) { //$NON-NLS-1$ //$NON-NLS-2$
+							@Override
+							public void run() {
+								treeViewer.getTree().setRedraw(false);
+								treeViewer.collapseAll();
+								treeViewer.getTree().setRedraw(true);
+							}
+						});
 			}
 			toolBarManager.update(true);
 			section.setTextClient(toolBarManager.getControl());
@@ -239,6 +268,10 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 
 	private boolean showToolbarButtons() {
 		return (buttonOption & USE_GENERIC_TOOLBAR_BUTTONS) > 0;
+	}
+
+	private boolean showExpandCollapseButtons() {
+		return showToolbarButtons() && (buttonOption & USE_EXPAND_COLLAPSE_BUTTONS) > 0;
 	}
 
 	protected Action createCustomToolbarAddAction() {
