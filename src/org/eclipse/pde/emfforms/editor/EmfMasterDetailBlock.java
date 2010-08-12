@@ -7,10 +7,10 @@
  * 
  * Contributors:
  *     Anyware Technologies - initial API and implementation
- *     Sebastien Moran <SMoran@sierrawireless.com> - bug 308802
+ *     Sebastien Moran <SMoran@sierrawireless.com> - bug 308802, 322393
  *     Jacques Lescot <JLescot@sierrawireless.com> - bug 314677
  *
- * $Id: EmfMasterDetailBlock.java,v 1.25 2010/06/16 17:28:11 bcabe Exp $
+ * $Id: EmfMasterDetailBlock.java,v 1.26 2010/08/12 12:13:33 bcabe Exp $
  */
 package org.eclipse.pde.emfforms.editor;
 
@@ -41,6 +41,8 @@ import org.eclipse.ui.forms.*;
 import org.eclipse.ui.forms.widgets.*;
 
 public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements IDetailsPageProvider, IMenuListener {
+
+	public static final int DEFAULT_SECTION_OPTIONS = Section.DESCRIPTION | ExpandableComposite.TITLE_BAR;
 
 	public static final int DEFAULT_VIEWER_OPTIONS = SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL;
 
@@ -86,6 +88,8 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 	protected ToolBarManager toolBarManager;
 	private IAction removeAction;
 
+	private Section section;
+
 	public EmfMasterDetailBlock(EmfFormEditor<?> editor, String title) {
 		this.title = title;
 		this.parentEditor = editor;
@@ -100,7 +104,7 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 	protected void createMasterPart(final IManagedForm managedForm, Composite parent) {
 		FormToolkit toolkit = parentEditor.getToolkit();
 
-		Section section = toolkit.createSection(parent, Section.DESCRIPTION | ExpandableComposite.TITLE_BAR);
+		section = toolkit.createSection(parent, getSectionOptions());
 		section.setText(title);
 		section.setDescription("Edit " + title); //$NON-NLS-1$
 		section.marginWidth = 5;
@@ -221,6 +225,10 @@ public abstract class EmfMasterDetailBlock extends MasterDetailsBlock implements
 		getEditor().addViewerToListenTo(getTreeViewer());
 
 		section.setClient(client);
+	}
+
+	protected int getSectionOptions() {
+		return DEFAULT_SECTION_OPTIONS;
 	}
 
 	/**
